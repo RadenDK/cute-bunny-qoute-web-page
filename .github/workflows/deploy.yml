@@ -23,12 +23,12 @@ jobs:
       # Step 3: Build Docker image
       - name: Build Docker Image
         run: |
-          docker build -t CuteBunnyWebApp:latest ./CuteBunnyWebApp
+          docker build -t cute_bunny_web_app:latest ./CuteBunnyWebApp
 
       # Step 4: Save Docker image to tarball
       - name: Save Docker Image to Tarball
         run: |
-          docker save CuteBunnyWebApp:latest -o image.tar
+          docker save cute_bunny_web_app:latest -o image.tar
 
       # Step 5: Transfer tarball to VPS
       - name: Transfer Tarball to VPS
@@ -41,8 +41,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
             set -e
             docker load -i /root/image.tar
-            docker stop CuteBunnyWebApp || true
-            docker rm CuteBunnyWebApp || true
+            docker stop cute_bunny_web_app || true
+            docker rm cute_bunny_web_app || true
             docker run -d -p 7001:80 \
               --env APP_NAME="CuteBunnyWebApp" \
               --env APP_ENV="production" \
@@ -54,8 +54,8 @@ jobs:
               --env DB_PASSWORD="${DB_PASSWORD}" \
               --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
               --env OPENAI_API_KEY="${BING_API_KEY}" \
-              --name CuteBunnyWebApp \
-              CuteBunnyWebApp:latest
+              --name cute_bunny_web_app \
+              cute_bunny_web_app:latest
             rm -f /root/image.tar
           EOF
         env:
