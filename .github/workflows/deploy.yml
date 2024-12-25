@@ -6,26 +6,27 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout Repository
+      # Step 1: Check out your code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH key
-      - name: Set up SSH key for deployment
+      # Step 2: Set up SSH so we can SCP & SSH to the VPS
+      - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      # Step 3: Build Docker image
+      # Step 3: Build Docker image on GitHub runner
       - name: Build Docker Image
         run: |
-          docker build -t cutebunnywebapp:latest ./CuteBunnyWebApp
+          docker build -t cutebunnywebapp:latest .
 
-      # Step 4: Save Docker image to tarball
+      # Step 4: Save Docker image to a tarball
       - name: Save Docker Image to Tarball
         run: |
           docker save cutebunnywebapp:latest -o image.tar
@@ -35,29 +36,37 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no image.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/root/
 
-      # Step 6: Deploy Docker container on VPS
+      # Step 6: SSH into VPS to load & run container
       - name: Deploy Docker Container on VPS
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
             set -e
+
+            # Load the new image from the tarball
             docker load -i /root/image.tar
+
+            # Stop & remove the old container if it exists
             docker stop cutebunnywebapp || true
             docker rm cutebunnywebapp || true
+
+            # Run the new container, injecting secrets from environment
             docker run -d -p 7001:80 \
-              -e APP_KEY="${APP_KEY}" \
-              -e DB_CONNECTION="mysql" \
-              -e DB_HOST="${DB_HOST}" \
-              -e DB_PORT="${DB_PORT}" \
-              -e DB_DATABASE="${DB_DATABASE}" \
-              -e DB_USERNAME="${DB_USERNAME}" \
-              -e DB_PASSWORD="${DB_PASSWORD}" \
-              -e BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
-              -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+              --env APP_KEY="${APP_KEY}" \
+              --env DB_HOST="${DB_HOST}" \
+              --env DB_PORT="${DB_PORT}" \
+              --env DB_DATABASE="${DB_DATABASE}" \
+              --env DB_USERNAME="${DB_USERNAME}" \
+              --env DB_PASSWORD="${DB_PASSWORD}" \
+              --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
+              --env OPENAI_API_KEY="${OPENAI_API_KEY}" \
               --name cutebunnywebapp \
               cutebunnywebapp:latest
+
+            # Clean up the tarball
             rm -f /root/image.tar
           EOF
         env:
+          # These environment variables will be visible inside the SSH session
           APP_KEY: ${{ secrets.APP_KEY }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
@@ -67,7 +76,6 @@ jobs:
           BING_API_KEY: ${{ secrets.BING_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # Step 7: Clean up local tarball
+      # Step 7: Clean up local tarball on the runner
       - name: Clean Up Local Tarball
-        run: |
-          rm -f image.tar
+        run: rm -f image.tar
