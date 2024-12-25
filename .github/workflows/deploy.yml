@@ -24,7 +24,9 @@ jobs:
       # Step 3: Build Docker image on GitHub runner
       - name: Build Docker Image
         run: |
-          docker build -t cutebunnywebapp:latest .
+          docker build -t cutebunnywebapp:latest \
+            -f CuteBunnyWebApp/Dockerfile \
+            CuteBunnyWebApp
 
       # Step 4: Save Docker image to a tarball
       - name: Save Docker Image to Tarball
