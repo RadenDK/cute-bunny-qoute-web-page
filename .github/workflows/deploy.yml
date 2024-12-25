@@ -1,0 +1,67 @@
+name: Deploy CuteBunnyWebApp
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up SSH key for deployment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Build Docker Image
+        run: |
+          docker build -t CuteBunnyWebApp:latest ./CuteBunnyWebApp
+
+      - name: Save Docker Image to Tarball
+        run: |
+          docker save CuteBunnyWebApp:latest -o image.tar
+
+      - name: Transfer Tarball to VPS
+        run: |
+          scp -o StrictHostKeyChecking=no image.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/root/
+
+            - name: Deploy Docker Container on VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
+            set -e
+            docker load -i /root/image.tar
+            docker stop CuteBunnyWebApp || true
+            docker rm CuteBunnyWebApp || true
+            docker run -d -p 7001:80 \
+              --env APP_NAME="CuteBunnyWebApp" \
+              --env APP_ENV="production" \
+              --env APP_KEY="${APP_KEY}" \
+              --env DB_HOST="${DB_HOST}" \
+              --env DB_PORT="${DB_PORT}" \
+              --env DB_DATABASE="${DB_NAME}" \
+              --env DB_USERNAME="${DB_USERNAME}" \
+              --env DB_PASSWORD="${DB_PASSWORD}" \
+              --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
+              --env OPENAI_API_KEY="${OPENAI_API_KEY}" \
+              --name CuteBunnyWebApp \
+              CuteBunnyWebApp:latest
+            rm -f /root/image.tar
+          EOF
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Clean Up Local Tarball
+        run: |
+          rm -f image.tar
