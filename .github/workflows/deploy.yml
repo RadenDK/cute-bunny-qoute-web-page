@@ -9,28 +9,34 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      # Step 2: Set up SSH key
       - name: Set up SSH key for deployment
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
+      # Step 3: Build Docker image
       - name: Build Docker Image
         run: |
           docker build -t CuteBunnyWebApp:latest ./CuteBunnyWebApp
 
+      # Step 4: Save Docker image to tarball
       - name: Save Docker Image to Tarball
         run: |
           docker save CuteBunnyWebApp:latest -o image.tar
 
+      # Step 5: Transfer tarball to VPS
       - name: Transfer Tarball to VPS
         run: |
           scp -o StrictHostKeyChecking=no image.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/root/
 
-            - name: Deploy Docker Container on VPS
+      # Step 6: Deploy Docker container on VPS
+      - name: Deploy Docker Container on VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
             set -e
@@ -47,7 +53,7 @@ jobs:
               --env DB_USERNAME="${DB_USERNAME}" \
               --env DB_PASSWORD="${DB_PASSWORD}" \
               --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
-              --env OPENAI_API_KEY="${OPENAI_API_KEY}" \
+              --env OPENAI_API_KEY="${BING_API_KEY}" \
               --name CuteBunnyWebApp \
               CuteBunnyWebApp:latest
             rm -f /root/image.tar
@@ -62,6 +68,7 @@ jobs:
           BING_API_KEY: ${{ secrets.BING_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
+      # Step 7: Clean up local tarball
       - name: Clean Up Local Tarball
         run: |
           rm -f image.tar
