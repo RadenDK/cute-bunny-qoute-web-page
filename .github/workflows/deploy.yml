@@ -23,12 +23,12 @@ jobs:
       # Step 3: Build Docker image
       - name: Build Docker Image
         run: |
-          docker build -t cute_bunny_web_app:latest ./CuteBunnyWebApp
+          docker build -t cutebunnywebapp:latest ./CuteBunnyWebApp
 
       # Step 4: Save Docker image to tarball
       - name: Save Docker Image to Tarball
         run: |
-          docker save cute_bunny_web_app:latest -o image.tar
+          docker save cutebunnywebapp:latest -o image.tar
 
       # Step 5: Transfer tarball to VPS
       - name: Transfer Tarball to VPS
@@ -41,28 +41,27 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
             set -e
             docker load -i /root/image.tar
-            docker stop cute_bunny_web_app || true
-            docker rm cute_bunny_web_app || true
+            docker stop cutebunnywebapp || true
+            docker rm cutebunnywebapp || true
             docker run -d -p 7001:80 \
-              --env APP_NAME="CuteBunnyWebApp" \
-              --env APP_ENV="production" \
-              --env APP_KEY="${APP_KEY}" \
-              --env DB_HOST="${DB_HOST}" \
-              --env DB_PORT="${DB_PORT}" \
-              --env DB_DATABASE="${DB_NAME}" \
-              --env DB_USERNAME="${DB_USERNAME}" \
-              --env DB_PASSWORD="${DB_PASSWORD}" \
-              --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
-              --env OPENAI_API_KEY="${BING_API_KEY}" \
-              --name cute_bunny_web_app \
-              cute_bunny_web_app:latest
+              -e APP_KEY="${APP_KEY}" \
+              -e DB_CONNECTION="mysql" \
+              -e DB_HOST="${DB_HOST}" \
+              -e DB_PORT="${DB_PORT}" \
+              -e DB_DATABASE="${DB_DATABASE}" \
+              -e DB_USERNAME="${DB_USERNAME}" \
+              -e DB_PASSWORD="${DB_PASSWORD}" \
+              -e BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
+              -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+              --name cutebunnywebapp \
+              cutebunnywebapp:latest
             rm -f /root/image.tar
           EOF
         env:
           APP_KEY: ${{ secrets.APP_KEY }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           BING_API_KEY: ${{ secrets.BING_API_KEY }}
