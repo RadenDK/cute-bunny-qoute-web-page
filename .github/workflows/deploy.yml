@@ -14,70 +14,63 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH so we can SCP & SSH to the VPS
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      # Step 3: Build Docker image on GitHub runner
+      # Step 2: Build the Docker image for the CuteBunnyWebApp
       - name: Build Docker Image
         run: |
-          docker build -t cutebunnywebapp:latest \
+          docker build \
+            -t cutebunnywebapp:latest \
             -f CuteBunnyWebApp/Dockerfile \
             CuteBunnyWebApp
 
-      # Step 4: Save Docker image to a tarball
-      - name: Save Docker Image to Tarball
-        run: |
-          docker save cutebunnywebapp:latest -o image.tar
+      # Step 3: Save the Docker image as a tar file for easy transfer
+      - name: Save Docker Image as Tarball
+        run: docker save cutebunnywebapp:latest -o image.tar
 
-      # Step 5: Transfer tarball to VPS
-      - name: Transfer Tarball to VPS
-        run: |
-          scp -o StrictHostKeyChecking=no image.tar ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/root/
+      # Step 4: (Optional) set permissions for the tar file
+      - name: Set permissions for Tarball
+        run: chmod 755 image.tar
 
-      # Step 6: SSH into VPS to load & run container
-      - name: Deploy Docker Container on VPS
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
-            set -e
+      # Step 5: Copy the Docker image tar file to the VPS
+      - name: Copy image to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: image.tar
+          target: /root/
 
-            # Load the new image from the tarball
+      # Step 6: SSH into the VPS and deploy the Docker image
+      - name: SSH into VPS and deploy Docker image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # 1. Load the new image
             docker load -i /root/image.tar
-
-            # Stop & remove the old container if it exists
+            
+            # 2. Stop & remove the old container if it exists
             docker stop cutebunnywebapp || true
             docker rm cutebunnywebapp || true
 
-            # Run the new container, injecting secrets from environment
+            # 3. Run the new container with environment variables
             docker run -d -p 7001:80 \
-              --env APP_KEY="${APP_KEY}" \
-              --env DB_HOST="${DB_HOST}" \
-              --env DB_PORT="${DB_PORT}" \
-              --env DB_DATABASE="${DB_DATABASE}" \
-              --env DB_USERNAME="${DB_USERNAME}" \
-              --env DB_PASSWORD="${DB_PASSWORD}" \
-              --env BING_IMAGE_SEARCH_API_KEY="${BING_API_KEY}" \
-              --env OPENAI_API_KEY="${OPENAI_API_KEY}" \
               --name cutebunnywebapp \
+              -e APP_KEY="${{ secrets.APP_KEY }}" \
+              -e DB_HOST="${{ secrets.DB_HOST }}" \
+              -e DB_PORT="${{ secrets.DB_PORT }}" \
+              -e DB_DATABASE="${{ secrets.DB_DATABASE }}" \
+              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e BING_IMAGE_SEARCH_API_KEY="${{ secrets.BING_API_KEY }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               cutebunnywebapp:latest
 
-            # Clean up the tarball
+            # 4. (Optional) Clean up the tarball
             rm -f /root/image.tar
-          EOF
-        env:
-          # These environment variables will be visible inside the SSH session
-          APP_KEY: ${{ secrets.APP_KEY }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          BING_API_KEY: ${{ secrets.BING_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # Step 7: Clean up local tarball on the runner
+      # Step 7: (Optional) Clean up local tarball on the GitHub runner
       - name: Clean Up Local Tarball
         run: rm -f image.tar
