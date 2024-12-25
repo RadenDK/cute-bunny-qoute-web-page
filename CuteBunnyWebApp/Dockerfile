@@ -16,13 +16,16 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . .
 
-# Set Laravel's public directory as DocumentRoot
+# Configure Apache: use the Laravel public directory as DocumentRoot
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
-# Allow Apache to serve Laravel properly
+# Allow Apache to respect .htaccess for Laravel routing
 RUN echo "<Directory /var/www/html/public>\n\
     AllowOverride All\n\
 </Directory>" >> /etc/apache2/apache2.conf
+
+# Set the ServerName to remove the "Could not reliably determine the server’s FQDN" warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
