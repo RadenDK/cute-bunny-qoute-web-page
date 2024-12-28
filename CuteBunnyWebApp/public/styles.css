@@ -84,3 +84,22 @@ body {
         font-size: 1em; /* Adjust font size for better readability on small screens */
     }
 }
+
+.language-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.language-toggle a {
+    text-decoration: none;
+    color: #555;
+    margin: 0 5px;
+}
+
+.language-toggle a:hover {
+    text-decoration: underline;
+    color: #f08a5d;
+}

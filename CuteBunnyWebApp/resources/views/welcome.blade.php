@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
@@ -10,12 +10,17 @@
 </head>
 
 <body>
+    <div class="language-toggle">
+        <a href="{{ url('/language/english') }}">English</a> |
+        <a href="{{ url('/language/danish') }}">Danish</a>
+    </div>
+
     <div class="container">
         <div class="image-container">
             <img class="image" src="{{ $imageUrl }}" alt="Cute Bunny">
         </div>
         <div class="quote">
-            <blockquote>{{ $qoute }}</blockquote>
+            <blockquote>{{ $quote }}</blockquote>
         </div>
     </div>
 </body>

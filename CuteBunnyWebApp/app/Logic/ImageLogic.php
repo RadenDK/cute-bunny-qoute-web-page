@@ -8,10 +8,10 @@ use Carbon\Carbon;
 
 class ImageLogic
 {
-    public function getDailyImageUrl()
+    public function GetDailyImageUrl()
     {
         // Retrieve the latest record from the database
-        $latestImage = $this->getLatestRecordFromDatabase();
+        $latestImage = $this->GetLatestRecordFromDatabase();
 
         // Check if the data matches the current date
         $today = Carbon::today()->toDateString();
@@ -21,16 +21,16 @@ class ImageLogic
         }
 
         // Generate a new image URL or fall back to the latest one in the database
-        return $this->getNewImageOrFallback();
+        return $this->GetNewImageOrFallback();
     }
 
-    private function getLatestRecordFromDatabase()
+    private function GetLatestRecordFromDatabase()
     {
         // Retrieve the latest record by created_at timestamp
         return ImageUrl::latest('created_at')->first();
     }
 
-    private function getNewImageOrFallback()
+    private function GetNewImageOrFallback()
     {
         $apiKey = env('BING_IMAGE_SEARCH_API_KEY');
 
@@ -71,7 +71,7 @@ class ImageLogic
         }
 
         // Fallback: Return the latest image in the database if no unique image is found
-        $latestImage = $this->getLatestRecordFromDatabase();
+        $latestImage = $this->GetLatestRecordFromDatabase();
         return $latestImage ? $latestImage->image_url : 'No images available.';
     }
 }

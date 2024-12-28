@@ -6,6 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Quote extends Model
 {
-    protected $fillable = ['quote'];
+    protected $fillable = ['english_quote', 'danish_quote'];
 
 }
