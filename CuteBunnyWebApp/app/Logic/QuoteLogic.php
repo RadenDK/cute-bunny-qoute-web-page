@@ -10,35 +10,45 @@ class QuoteLogic
 {
     public function GetDailyQuote(string $language)
     {
-        // Retrieve the latest quote from the database for the requested language
-        $latestQuote = $this->GetLatestQuoteFromDatabase($language);
+        // Retrieve todays quote if there is any from the database for the requested language. If no quote for today in db then value is null
+        $todaysQuote = $this->GetTodaysQuoteFromDatabase($language);
 
         // If a valid quote is found, return it
-        if ($latestQuote) {
-            return $latestQuote;
+        if ($todaysQuote) {
+            return $todaysQuote;
         }
 
         // Generate a new English quote and save it to the database
         $englishQuote = $this->GenerateNewEnglishQuoteAndSaveToDatabase();
+        // Then translate the quote to danish and save that to the database
+        $danishQuote = $this->TranslateAndSaveQuoteToDanish($englishQuote);
 
-        // If the requested language is Danish, translate the English quote to Danish
         if ($language === 'danish') {
-            return $this->TranslateAndSaveQuoteToDanish($englishQuote);
+            return $danishQuote;
+        } else {
+            return $englishQuote;
         }
-
-        return $englishQuote;
     }
 
-    private function GetLatestQuoteFromDatabase(string $language): ?string
+    private function GetTodaysQuoteFromDatabase(string $language): ?string
     {
         // Construct the column name dynamically
         $columnName = "{$language}_quote";
 
-        // Retrieve the latest value of the specified column where it is not null
-        return Quote::latest('created_at')
+        // Retrieve the latest record where the specified column is not null
+        $latestQuote = Quote::latest('created_at')
             ->whereNotNull($columnName)
-            ->value($columnName); // Directly retrieve the column value
+            ->first();
+
+        // Check if a record exists and the created_at date matches today's date
+        if ($latestQuote && $latestQuote->created_at->isToday()) {
+            return $latestQuote->$columnName;
+        }
+
+        // Return null if no record exists or the date does not match
+        return null;
     }
+
 
     private function GenerateNewEnglishQuoteAndSaveToDatabase(): string
     {
@@ -72,7 +82,7 @@ class QuoteLogic
                     ],
                 ],
             ]);
-            
+
 
             $response_data = json_decode($response->getBody(), true);
             $quote = $response_data['choices'][0]['message']['content'] ?? 'No quote available.';
