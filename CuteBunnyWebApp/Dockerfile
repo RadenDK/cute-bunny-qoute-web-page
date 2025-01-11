@@ -22,7 +22,6 @@ COPY . .
 # ===== Non-sensitive defaults baked into the image =====
 # These can be overridden at runtime if needed.
 ENV APP_ENV=production
-ENV DB_CONNECTION=mysql
 ENV SESSION_DRIVER=file
 ENV CACHE_DRIVER=file
 
