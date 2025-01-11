@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    && docker-php-ext-install pdo pdo_mysql zip \
+    libpq-dev \ 
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip \ 
     && a2enmod rewrite
 
 # Copy Composer from the official Composer image
