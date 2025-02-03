@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: cute-bunny-web-app
+    ports:
+      - "5000:80"  # Access via http://localhost:5000
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env  # Load environment variables
+    command: >
+      sh -c "
+      mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache &&
+      chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
+      chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache &&
+      cron && apache2-foreground
+      "
+    networks:
+      - dev-env-network 
+networks:
+  dev-env-network:
+    external: true
