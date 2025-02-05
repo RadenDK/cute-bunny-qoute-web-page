@@ -15,6 +15,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy application files into the container
+COPY . /var/www/html
+
 # Ensure Apache serves from Laravel's `public/` folder
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
@@ -30,6 +33,18 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Create the cron job file
+RUN echo "* * * * * /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/cronjob
+
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/cronjob
+
+# Apply cron job
+RUN crontab /etc/cron.d/cronjob
+
+# Create the log file to be able to run tail
+RUN touch /var/log/cron.log
 
 # Expose port 80
 EXPOSE 80
