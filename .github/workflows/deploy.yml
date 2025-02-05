@@ -72,7 +72,7 @@ jobs:
             rm -f /root/image.tar
 
             # 5. Run database migrations
-            docker exec cutebunnywebapp php artisan migrate
+            docker exec cutebunnywebapp php artisan migrate --force
 
       # Step 7: (Optional) Clean up local tarball on the GitHub runner
       - name: Clean Up Local Tarball
