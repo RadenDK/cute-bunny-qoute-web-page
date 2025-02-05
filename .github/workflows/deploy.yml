@@ -66,6 +66,11 @@ jobs:
               -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               -e BING_IMAGE_SEARCH_API_KEY="${{ secrets.BING_API_KEY }}" \
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e TWILIO_SENDER_PHONE_NUMBER="${{ secrets.TWILIO_SENDER_PHONE_NUMBER }}" \
+              -e TWILIO_RECEIVING_PHONE_NUMBER="${{ secrets.TWILIO_RECEIVING_PHONE_NUMBER }}" \
+              -e TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID }}" \
+              -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
+            
               cutebunnywebapp:latest
 
             # 4. (Optional) Clean up the tarball
