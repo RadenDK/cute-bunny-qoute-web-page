@@ -18,6 +18,9 @@ WORKDIR /var/www/html
 # Copy application files into the container
 COPY . /var/www/html
 
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
+
 # Ensure Apache serves from Laravel's `public/` folder
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
