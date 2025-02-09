@@ -1,5 +1,6 @@
 <?php
 
+use App\Logic\ImageLogic;
 use App\Logic\QuoteLogic;
 use App\Logic\SmsLogic;
 use Illuminate\Foundation\Inspiring;
@@ -18,4 +19,15 @@ Schedule::call(function () {
     $smsLogic = new SmsLogic($quoteLogic);
     $smsLogic->SendSmsReminder();
 })->timezone('Europe/Copenhagen')->dailyAt('08:15');
+//})->timezone('Europe/Copenhagen')->everyMinute();
+
+
+Schedule::call(function () {
+    $imageLogic = new ImageLogic();
+    $imageLogic->GetNewImageForDatabase();
+
+    $quoteLogic = new QuoteLogic();
+    $quoteLogic->GenerateNewQuotesToDatabase();
+
+})->timezone('Europe/Copenhagen')->dailyAt('00:00');
 

@@ -11,26 +11,22 @@ class ImageLogic
     public function GetDailyImageUrl()
     {
         // Retrieve the latest record from the database
-        $latestImage = $this->GetLatestRecordFromDatabase();
+        $latestImage = ImageUrl::latest('created_at')->first();
 
-        // Check if the data matches the current date
-        $today = Carbon::today()->toDateString();
-        if ($latestImage && $latestImage->created_at->toDateString() === $today) {
-            // Return the image URL if it matches today's date
-            return $latestImage->image_url;
+        // Check if the latest image URL is null
+        if ($latestImage === null || $latestImage->image_url === null) {
+            // Attempt to get a new image
+            $this->GetNewImageForDatabase();
+
+            // Retrieve the latest record again after attempting to get a new image
+            $latestImage = ImageUrl::latest('created_at')->first();
         }
 
-        // Generate a new image URL or fall back to the latest one in the database
-        return $this->GetNewImageOrFallback();
+        return $latestImage->image_url;
     }
 
-    private function GetLatestRecordFromDatabase()
-    {
-        // Retrieve the latest record by created_at timestamp
-        return ImageUrl::latest('created_at')->first();
-    }
 
-    private function GetNewImageOrFallback()
+    public function GetNewImageForDatabase()
     {
         $apiKey = env('BING_IMAGE_SEARCH_API_KEY');
 
@@ -64,14 +60,8 @@ class ImageLogic
 
                     // Save the unique image to the database
                     ImageUrl::create(["image_url" => $img_url]);
-
-                    return $img_url;
                 }
             }
         }
-
-        // Fallback: Return the latest image in the database if no unique image is found
-        $latestImage = $this->GetLatestRecordFromDatabase();
-        return $latestImage ? $latestImage->image_url : 'No images available.';
     }
 }
