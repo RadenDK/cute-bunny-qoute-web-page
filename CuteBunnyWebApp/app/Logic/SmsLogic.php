@@ -18,7 +18,7 @@ class SmsLogic
 
 
     // This is a method to send a sms reminder using Twilio. This was just some fun custom stuff I did for a friend
-    public function SendSmsReminder()
+    public function SendSmsReminder(): void
     {
         try {
             $sid = env('TWILIO_ACCOUNT_SID');

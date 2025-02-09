@@ -31,7 +31,7 @@ class DailyContentController extends Controller
         ]);
     }
 
-    public function SetLanguage(Request $request, $language)
+    public function SetLanguage(string $language)
     {
         // Validate and set the language cookie
         if (in_array($language, ['english', 'danish'])) {
