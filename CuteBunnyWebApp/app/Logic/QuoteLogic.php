@@ -2,9 +2,8 @@
 
 namespace App\Logic;
 
-use GuzzleHttp\Client;
 use App\Models\Quote;
-use Carbon\Carbon;
+use GuzzleHttp\Client;
 
 class QuoteLogic
 {
