@@ -34,3 +34,4 @@ Schedule::call(function () {
 
 // })->timezone('Europe/Copenhagen')->dailyAt('00:00');
 })->timezone('Europe/Copenhagen')->everyMinute();
+
