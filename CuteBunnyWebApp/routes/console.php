@@ -33,6 +33,6 @@ Schedule::call(function () {
     $quoteLogic->GenerateNewQuotesToDatabase();
 
 // })->timezone('Europe/Copenhagen')->dailyAt('00:00');
-})->timezone('Europe/Copenhagen')->EveryFiveMinutes();
+})->timezone('Europe/Copenhagen')->everyFiveMinutes();
 
 
