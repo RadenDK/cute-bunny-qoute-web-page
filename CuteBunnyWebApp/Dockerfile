@@ -4,7 +4,8 @@ FROM php:8.2-apache
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     zip unzip git cron libpq-dev \
-    && docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql
+    && docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -38,16 +39,16 @@ RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Create the cron job file
-RUN echo "* * * * * /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/cronjob
+RUN echo "* * * * * . /etc/environment && /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/cronjob
 
 # Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/cronjob
-
-# Apply cron job
-RUN crontab /etc/cron.d/cronjob
+RUN chmod 0644 /etc/cron.d/cronjob && crontab /etc/cron.d/cronjob
 
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
+
+# Save environment variables at build time for cron jobs
+RUN printenv | sed 's/^/export /' > /etc/environment
 
 # Expose port 80
 EXPOSE 80
