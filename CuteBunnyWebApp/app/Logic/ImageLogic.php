@@ -33,15 +33,15 @@ class ImageLogic
 
         $client = new Client();
 
-        // Fetch the last 10 images from the database
-        $lastTenImages = ImageUrl::latest()->take(10)->pluck('image_url')->toArray();
+        // Fetch the last 20 images from the database
+        $lastTenImages = ImageUrl::latest()->take(20)->pluck('image_url')->toArray();
 
         // Query multiple images
         $response = $client->request('GET', $baseUrl, [
             'headers' => ['Ocp-Apim-Subscription-Key' => $apiKey],
             'query' => [
                 'q' => "cute bunny high resolution",
-                'count' => 15, // Fetch multiple images
+                'count' => 25, // Fetch multiple images
                 'offset' => rand(0, 100), // Randomize starting position
                 'safeSearch' => 'Strict',
                 'imageType' => 'Photo',
