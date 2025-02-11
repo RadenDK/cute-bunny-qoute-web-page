@@ -39,13 +39,13 @@ RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Create the cron job file
-RUN echo "* * * * * . /etc/environment && /usr/local/bin/php /var/www/html/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/cronjob
+RUN echo "* * * * * root echo 'Cron is running at $(date)' >> /tmp/cron_test.log 2>&1" > /etc/cron.d/cronjob
 
 # Give execution rights on the cron job
 RUN chmod 0644 /etc/cron.d/cronjob && crontab /etc/cron.d/cronjob
 
 # Create the log file to be able to run tail
-RUN touch /var/log/cron.log
+RUN touch /tmp/cron_test.log
 
 # Save environment variables at build time for cron jobs
 RUN printenv | sed 's/^/export /' > /etc/environment
@@ -54,4 +54,4 @@ RUN printenv | sed 's/^/export /' > /etc/environment
 EXPOSE 80
 
 # Start Apache and cron
-CMD ["sh", "-c", "cron && apache2-foreground"]
+CMD ["sh", "-c", "cron && tail -f /tmp/cron_test.log"]
