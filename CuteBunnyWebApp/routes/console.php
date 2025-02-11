@@ -32,6 +32,5 @@ Schedule::call(function () {
     $quoteLogic = new QuoteLogic();
     $quoteLogic->GenerateNewQuotesToDatabase();
 
-// })->timezone('Europe/Copenhagen')->dailyAt('00:00');
-})->timezone('Europe/Copenhagen')->everyMinute();
+ })->timezone('Europe/Copenhagen')->dailyAt('00:00');
 
