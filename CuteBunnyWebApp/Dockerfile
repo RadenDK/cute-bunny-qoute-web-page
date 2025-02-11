@@ -39,7 +39,7 @@ RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy the script into the container
-COPY run__laravel_schedule.sh /usr/local/bin/run_schedule.sh
+COPY run_laravel_schedule.sh /usr/local/bin/run_laravel_schedule.sh
 
 # Give execution rights on the script
 RUN chmod +x /usr/local/bin/run_laravel_schedule.sh
