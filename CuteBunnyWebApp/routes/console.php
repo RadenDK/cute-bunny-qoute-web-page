@@ -23,7 +23,6 @@ Schedule::call(function () {
     $smsLogic = new SmsLogic($quoteLogic);
     $smsLogic->SendSmsReminder();
 })->timezone('Europe/Copenhagen')->dailyAt('08:15');
-//})->timezone('Europe/Copenhagen')->everyMinute();
 
 
 Schedule::call(function () {
@@ -33,6 +32,7 @@ Schedule::call(function () {
     $quoteLogic = new QuoteLogic();
     $quoteLogic->GenerateNewQuotesToDatabase();
 
-})->timezone('Europe/Copenhagen')->dailyAt('00:00');
+// })->timezone('Europe/Copenhagen')->dailyAt('00:00');
+})->timezone('Europe/Copenhagen')->EveryFiveMinutes();
 
 
