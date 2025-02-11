@@ -57,4 +57,4 @@ RUN touch /var/log/cron_debug.log
 EXPOSE 80
 
 # Runtime entrypoint to start services
-ENTRYPOINT ["sh", "-c", "cron && apache2-foreground"]
+ENTRYPOINT ["sh", "-c", "printenv > /etc/environment && cron && /usr/local/bin/run_laravel_schedule.sh && apache2-foreground"]
