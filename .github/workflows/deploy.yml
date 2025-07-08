@@ -7,14 +7,12 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted  # this tells GitHub to use your self-hosted runner
+    runs-on: self-hosted
 
     steps:
-      # Step 1: Check out your code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Build the Docker image
       - name: Build Docker Image
         run: |
           docker build \
@@ -22,14 +20,13 @@ jobs:
             -f CuteBunnyWebApp/Dockerfile \
             CuteBunnyWebApp
 
-      # Step 3: Stop & remove the old container if it exists
       - name: Stop old container
         run: docker rm -f cutebunnywebapp || true
 
-      # Step 4: Run the new container with secrets
-      - name: Run new container
+      - name: Run new container on shared network
         run: |
-          docker run -d --restart=always -p 7001:80 \
+          docker run -d --restart=always \
+            --network webproxy \
             --name cutebunnywebapp \
             -e APP_KEY="${{ secrets.APP_KEY }}" \
             -e DB_HOST="${{ secrets.DB_HOST }}" \
@@ -45,10 +42,8 @@ jobs:
             -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
             cutebunnywebapp:latest
 
-      # Step 5: Run database migrations (optional, if Laravel or similar)
       - name: Run Migrations
         run: docker exec cutebunnywebapp php artisan migrate --force
 
-      # Step 6: Prune old Docker images (optional)
       - name: Prune old Docker images
         run: docker image prune -f
