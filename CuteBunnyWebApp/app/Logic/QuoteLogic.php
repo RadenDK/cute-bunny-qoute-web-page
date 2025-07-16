@@ -62,7 +62,7 @@ class QuoteLogic
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Create a unique, motivational bunny-related quote. Make sure the quote does not resemble or repeat the following examples:\n" . $lastQuotesString,
+                    'content' => "Create a unique, motivational bunny-related quote that is no more than 3 sentances long. Make sure the quote does not resemble or repeat the following examples:\n" . $lastQuotesString,
                 ],
             ];
 
