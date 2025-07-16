@@ -28,21 +28,19 @@ class ImageLogic
     public function GetNewImageForDatabase()
     {
         $apiKey = env('BING_IMAGE_SEARCH_API_KEY');
-
         $baseUrl = 'https://api.bing.microsoft.com/v7.0/images/search';
-
         $client = new Client();
 
-        // Fetch the last 20 images from the database
-        $lastTenImages = ImageUrl::latest()->take(20)->pluck('image_url')->toArray();
+        // Get the last 20 saved image URLs
+        $lastTwentyImages = ImageUrl::latest()->take(20)->pluck('image_url')->toArray();
 
-        // Query multiple images
+        // Fetch 25 new images from Bing
         $response = $client->request('GET', $baseUrl, [
             'headers' => ['Ocp-Apim-Subscription-Key' => $apiKey],
             'query' => [
                 'q' => "cute bunny high resolution",
-                'count' => 25, // Fetch multiple images
-                'offset' => rand(0, 100), // Randomize starting position
+                'count' => 25,
+                'offset' => rand(0, 100),
                 'safeSearch' => 'Strict',
                 'imageType' => 'Photo',
             ],
@@ -50,15 +48,13 @@ class ImageLogic
 
         $response_json = json_decode($response->getBody());
 
-        // Ensure the response contains images
-        if (isset($response_json->value) && count($response_json->value) > 0) {
-            // Find the first unique image
+        // Check for valid image data
+        if (isset($response_json->value) && is_array($response_json->value)) {
             foreach ($response_json->value as $image) {
-                if (!in_array($image->contentUrl, $lastTenImages)) {
-                    $img_url = $image->contentUrl;
-
-                    // Save the unique image to the database
-                    ImageUrl::create(["image_url" => $img_url]);
+                if (!in_array($image->contentUrl, $lastTwentyImages)) {
+                    // Save the first unique image only
+                    ImageUrl::create(['image_url' => $image->contentUrl]);
+                    break; // Stop after saving one
                 }
             }
         }
