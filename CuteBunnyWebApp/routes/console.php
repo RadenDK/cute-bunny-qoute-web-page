@@ -17,13 +17,6 @@ Artisan::command('generate:daily-content', function () {
 })->describe('Generate daily image and quotes manually');
 
 
-// Make it so that it will send a sms notification every day at 8:15 AM Danish time
-Schedule::call(function () {
-    $quoteLogic = new QuoteLogic();
-    $smsLogic = new SmsLogic($quoteLogic);
-    $smsLogic->SendSmsReminder();
-})->timezone('Europe/Copenhagen')->dailyAt('08:15');
-
 
 Schedule::call(function () {
     $imageLogic = new ImageLogic();
