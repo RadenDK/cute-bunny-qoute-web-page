@@ -19,4 +19,3 @@ You can view the project live at [https://motivationalbunny.rasmusjensen.tech/](
 - Docker
 - Bing Image Search API
 - OpenAI API for generating quotes
-
