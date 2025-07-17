@@ -58,11 +58,11 @@ class QuoteLogic
             $messages = [
                 [
                     'role' => 'system',
-                    'content' => 'You are a master at creating unique, motivational, and slightly whimsical quotes about bunnies. These quotes can vary in length but should generally be between 15 and 45 words. Use playful, inspiring language that evokes happiness and imagination. Avoid quotation marks and keep the tone light, encouraging, and bunny-themed.',
+                    'content' => 'You are a master at creating unique, motivational, and slightly whimsical quotes about bunnies. Each quote must be short—ideally between 15 and 45 words and no more than 2 sentences long. Use playful, inspiring language that evokes happiness and imagination. Avoid quotation marks and keep the tone light, encouraging, and bunny-themed.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Create a unique, motivational bunny-related quote that is no more than 2 sentances long. Make sure the quote does not resemble or repeat the following examples:\n" . $lastQuotesString,
+                    'content' => "Create a unique, motivational bunny-related quote that is no more than 2 sentences long and preferably between 15 and 45 words. Do not base the length of your response on the previous quotes. Make sure the quote does not resemble or repeat the following examples:\n" . $lastQuotesString,
                 ],
             ];
 
