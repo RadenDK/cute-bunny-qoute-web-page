@@ -16,6 +16,12 @@ Artisan::command('generate:daily-content', function () {
     $quoteLogic->GenerateNewQuotesToDatabase();
 })->describe('Generate daily image and quotes manually');
 
+Artisan::command('generate:new-image', function () {
+    $this->info('Starting generate:new-image...');
+    $imageLogic = new ImageLogic();
+    $imageLogic->GetNewImageForDatabase();
+    $this->info('generate:new-image finished.');
+})->describe('Generate new daily image');
 
 
 Schedule::call(function () {

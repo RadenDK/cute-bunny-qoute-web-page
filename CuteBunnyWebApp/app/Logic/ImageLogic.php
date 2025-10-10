@@ -4,59 +4,73 @@ namespace App\Logic;
 
 use App\Models\ImageUrl;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class ImageLogic
 {
-    public function GetDailyImageUrl()
+    public function getDailyImageUrl(): ?string
     {
-        // Retrieve the latest record from the database
+        // Get the latest image, or fetch one if missing
         $latestImage = ImageUrl::latest('created_at')->first();
 
-        // Check if the latest image URL is null
-        if ($latestImage === null || $latestImage->image_url === null) {
-            // Attempt to get a new image
-            $this->GetNewImageForDatabase();
-
-            // Retrieve the latest record again after attempting to get a new image
+        if (!$latestImage || !$latestImage->image_url) {
+            $this->fetchAndStoreNewImage();
             $latestImage = ImageUrl::latest('created_at')->first();
         }
 
-        return $latestImage->image_url;
+        return $latestImage?->image_url;
     }
 
-
-    public function GetNewImageForDatabase()
+    public function GetNewImageForDatabase(): void
     {
-        $apiKey = env('BING_IMAGE_SEARCH_API_KEY');
-        $baseUrl = 'https://api.bing.microsoft.com/v7.0/images/search';
+        $apiKey = env('PEXELS_API_KEY');
+        $baseUrl = 'https://api.pexels.com/v1/search';
         $client = new Client();
 
-        // Get the last 20 saved image URLs
-        $lastTwentyImages = ImageUrl::latest()->take(20)->pluck('image_url')->toArray();
+        $page = rand(1, 20);
+        $perPage = 20;
+        $query = 'cute bunny rabbit';
+        $orientation = 'landscape';
 
-        // Fetch 25 new images from Bing
-        $response = $client->request('GET', $baseUrl, [
-            'headers' => ['Ocp-Apim-Subscription-Key' => $apiKey],
-            'query' => [
-                'q' => "cute bunny high resolution",
-                'count' => 25,
-                'offset' => rand(0, 100),
-                'safeSearch' => 'Strict',
-                'imageType' => 'Photo',
-            ],
-        ]);
+        try {
+            $response = $client->get($baseUrl, [
+                'headers' => ['Authorization' => $apiKey],
+                'query' => [
+                    'query' => $query,
+                    'orientation' => $orientation,
+                    'page' => $page,
+                    'per_page' => $perPage,
+                ],
+            ]);
 
-        $response_json = json_decode($response->getBody());
+            $data = json_decode($response->getBody(), true);
 
-        // Check for valid image data
-        if (isset($response_json->value) && is_array($response_json->value)) {
-            foreach ($response_json->value as $image) {
-                if (!in_array($image->contentUrl, $lastTwentyImages)) {
-                    // Save the first unique image only
-                    ImageUrl::create(['image_url' => $image->contentUrl]);
-                    break; // Stop after saving one
-                }
+            if (empty($data['photos'])) {
+                Log::warning('No photos returned from Pexels API.');
+                return;
             }
+
+            // Get last 20 URLs from the database
+            $lastTwentyImages = ImageUrl::latest()
+                ->take(20)
+                ->pluck('image_url')
+                ->toArray();
+
+            // Pick a random photo index
+            $randomIndex = rand(0, count($data['photos']) - 1);
+            $chosenPhoto = $data['photos'][$randomIndex];
+
+            // Extract the actual image URL (not the HTML page URL)
+            $chosenUrl = $chosenPhoto['src']['original'] ?? null;
+
+            if ($chosenUrl && !in_array($chosenUrl, $lastTwentyImages)) {
+                ImageUrl::create(['image_url' => $chosenUrl]);
+            } else {
+                Log::info('Chosen image is duplicate or invalid.');
+            }
+
+        } catch (\Throwable $e) {
+            Log::error('Error fetching image from Pexels: ' . $e->getMessage());
         }
     }
 }
