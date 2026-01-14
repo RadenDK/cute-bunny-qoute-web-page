@@ -98,21 +98,24 @@ class QuoteLogic
         }
     }
 
-    // Might throw an exception from OpenAi
+    // Might throw an exception from OpenRouter
     public function GetAiGeneratedText(array $messages)
     {
-        $apiKey = env("OPENAI_API_KEY");
+        $apiKey = env("OPENROUTER_AI_KEY");
 
         $client = new Client();
 
-        $response = $client->post('https://api.openai.com/v1/chat/completions', [
+        $response = $client->post('https://openrouter.ai/api/v1/chat/completions', [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $apiKey,
             ],
             'json' => [
-                'model' => 'gpt-4o-mini',
-                'messages' => $messages
+                'model' => 'xiaomi/mimo-v2-flash:free',
+                'messages' => $messages,
+                'reasoning' => [
+                    'enabled' => true
+                ]
             ],
         ]);
 
