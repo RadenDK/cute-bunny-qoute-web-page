@@ -21,7 +21,7 @@ class DailyContentController extends Controller
     {
         $language = $request->cookie('language', 'english');
 
-        $image_url = $this->imageLogic->GetDailyImageUrl();
+        $image_url = $this->imageLogic->getDailyImageUrl();
 
         $quote = $this->quoteLogic->GetDailyQuote($language);
 
