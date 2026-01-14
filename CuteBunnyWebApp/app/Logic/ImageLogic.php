@@ -16,7 +16,7 @@ class ImageLogic
         $latestImage = ImageUrl::latest('created_at')->first();
 
         if (!$latestImage || !$latestImage->image_url) {
-            $this->GetNewImageForDatabase();
+            $this->fetchAndStoreNewImage();
             $latestImage = ImageUrl::latest('created_at')->first();
         }
 
@@ -52,7 +52,7 @@ class ImageLogic
         }
     }
 
-    public function GetNewImageForDatabase(): void
+    public function fetchAndStoreNewImage(): void
     {
         $apiKey = env('PEXELS_API_KEY');
         $baseUrl = 'https://api.pexels.com/v1/search';

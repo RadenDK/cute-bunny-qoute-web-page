@@ -4,7 +4,7 @@ This is a small hobby project that displays a new image of a bunny and a cute qu
 
 ## Live Demo
 
-You can view the project live at [https://motivationalbunny.rasmusjensen.tech/](https://motivationalbunny.rasmusjensen.tech/) (if it is still up).
+You can view the project live at [https://bunny.rasmusjensen.com/](https://bunny.rasmusjensen.com/) (if it is still up).
 
 ## Features
 
