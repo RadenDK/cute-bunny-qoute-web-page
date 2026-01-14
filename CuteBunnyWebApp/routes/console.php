@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schedule;
 // Just a command to try to test if there are errors with generating new content
 Artisan::command('generate:daily-content', function () {
     $imageLogic = new ImageLogic();
-    $imageLogic->GetNewImageForDatabase();
+    $imageLogic->fetchAndStoreNewImage();
 
     $quoteLogic = new QuoteLogic();
     $quoteLogic->GenerateNewQuotesToDatabase();
@@ -19,14 +19,14 @@ Artisan::command('generate:daily-content', function () {
 Artisan::command('generate:new-image', function () {
     $this->info('Starting generate:new-image...');
     $imageLogic = new ImageLogic();
-    $imageLogic->GetNewImageForDatabase();
+    $imageLogic->fetchAndStoreNewImage();
     $this->info('generate:new-image finished.');
 })->describe('Generate new daily image');
 
 
 Schedule::call(function () {
     $imageLogic = new ImageLogic();
-    $imageLogic->GetNewImageForDatabase();
+    $imageLogic->fetchAndStoreNewImage();
 
     $quoteLogic = new QuoteLogic();
     $quoteLogic->GenerateNewQuotesToDatabase();
