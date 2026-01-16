@@ -10,7 +10,6 @@
 </head>
 
 <body>
-    <h1 style="text-align: center; color: #333;">Watchtower Deploy Test</h1>
     <div class="language-toggle">
         <a href="{{ url('/language/english') }}">English</a> |
         <a href="{{ url('/language/danish') }}">Danish</a>
