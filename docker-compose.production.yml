@@ -1,0 +1,34 @@
+services:
+  bunny-quote:
+    image: ghcr.io/radendk/cute-bunny-qoute-web-page:latest
+    container_name: bunny-quote
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    networks:
+      - publicvm_web
+      - publicvm_backend
+    expose:
+      - "80"
+    environment:
+      - APP_NAME=BunnyQuote
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
+      - APP_URL=https://bunny.rasmusjensen.com
+      - LOG_CHANNEL=stderr
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=bunny_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - BING_IMAGE_SEARCH_API_KEY=${BING_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+networks:
+  publicvm_web:
+    external: true
+  publicvm_backend:
+    external: true
