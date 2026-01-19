@@ -47,18 +47,22 @@ jobs:
       - name: Create .env file
         run: |
           cat > .env << EOF
-          APP_KEY=${{ secrets.BUNNY_APP_KEY }}
+          APP_KEY=${{ secrets.APP_KEY }}
+          DB_CONNECTION=${{ secrets.DB_CONNECTION }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
           DB_USERNAME=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}
-          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_AI_KEY=${{ secrets.OPENROUTER_AI_KEY }}
           EOF
 
       - name: Deploy to publicvm
         run: |
           # Setup SSH key
           mkdir -p ~/.ssh
-          echo "${{ secrets.PUBLICVM_SSH_KEY }}" > ~/.ssh/id_ed25519_publicvm
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519_publicvm
           chmod 600 ~/.ssh/id_ed25519_publicvm
 
           # Add host to known_hosts
