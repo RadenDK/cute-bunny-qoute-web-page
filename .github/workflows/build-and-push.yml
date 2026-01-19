@@ -51,8 +51,7 @@ jobs:
           DB_USERNAME=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}
-          BING_API_KEY=${{ secrets.BING_API_KEY }}
-          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           EOF
 
       - name: Deploy to publicvm

@@ -17,5 +17,4 @@ You can view the project live at [https://bunny.rasmusjensen.com/](https://bunny
 - PHP
 - Laravel
 - Docker
-- Bing Image Search API
 - OpenAI API for generating quotes
