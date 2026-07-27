@@ -1,5 +1,5 @@
 # Base PHP with Apache
-FROM php:8.2-apache
+FROM php:8.5-apache
 
 # Build arguments for environment variables
 ARG APP_KEY
