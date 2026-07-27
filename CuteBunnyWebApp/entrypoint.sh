@@ -3,9 +3,9 @@
 
 # Ensure environment and permissions (optional)
 printenv > /etc/environment
-mkdir -p storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+mkdir -p storage bootstrap/cache public/images
+chown -R www-data:www-data storage bootstrap/cache public/images
+chmod -R 775 storage bootstrap/cache public/images
 
 # Add cron job to run Laravel scheduler every minute
 echo "* * * * * www-data php /var/www/html/artisan schedule:run >> /var/log/cron.log 2>&1" > /etc/cron.d/laravel-scheduler

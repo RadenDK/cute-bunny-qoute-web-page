@@ -20,8 +20,12 @@ class ImageLogic
             $latestImage = ImageUrl::latest('created_at')->first();
         }
 
-        // Return local image path instead of external URL
-        return $latestImage ? $this->getLocalImagePath() : null;
+        if ($latestImage) {
+            return $this->getLocalImagePath();
+        }
+
+        // Fetch failed (API/network/permissions) but a previously downloaded file may still be usable
+        return File::exists(public_path('images/daily-bunny.jpg')) ? $this->getLocalImagePath() : null;
     }
 
     private function getLocalImagePath(): string
