@@ -19,9 +19,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Composer dependencies
-composer.lock
-
 # NPM/Yarn dependencies and logs
 package-lock.json
 yarn.lock
