@@ -29,6 +29,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql \
     && rm -rf /var/lib/apt/lists/*
 
+# Use production php.ini so errors/warnings log instead of rendering in HTML
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # Enable Apache rewrite for Laravel routing
 RUN a2enmod rewrite
 
