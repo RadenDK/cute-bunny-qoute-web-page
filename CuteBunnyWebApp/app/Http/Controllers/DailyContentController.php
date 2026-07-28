@@ -25,10 +25,19 @@ class DailyContentController extends Controller
 
         $quote = $this->quoteLogic->GetDailyQuote($language);
 
-        return view("welcome", [
+        $response = response()->view("welcome", [
             "imageUrl" => $image_url,
             "quote" => $quote
         ]);
+
+        // Content is the same for everyone until the daily 00:00 regeneration, so let
+        // browsers/CDN cache the page for that long. Vary on the language cookie since
+        // the rendered quote differs per language.
+        $secondsUntilMidnight = now()->diffInSeconds(now('Europe/Copenhagen')->endOfDay());
+        $response->header('Cache-Control', "public, max-age={$secondsUntilMidnight}");
+        $response->header('Vary', 'Cookie');
+
+        return $response;
     }
 
     public function SetLanguage(string $language)

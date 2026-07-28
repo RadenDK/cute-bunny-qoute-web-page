@@ -4,13 +4,25 @@ namespace App\Logic;
 
 use App\Models\ImageUrl;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 
 class ImageLogic
 {
+    public const CACHE_KEY = 'daily_image_url';
+
     public function getDailyImageUrl(): ?string
+    {
+        return Cache::remember(
+            self::CACHE_KEY,
+            now('Europe/Copenhagen')->endOfDay(),
+            fn () => $this->fetchDailyImageUrlFromDatabase()
+        );
+    }
+
+    private function fetchDailyImageUrlFromDatabase(): ?string
     {
         // Get the latest image, or fetch one if missing
         $latestImage = ImageUrl::latest('created_at')->first();

@@ -4,11 +4,22 @@ namespace App\Logic;
 
 use App\Models\Quote;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Cache;
 
 class QuoteLogic
 {
+    public const CACHE_KEY_PREFIX = 'daily_quote_';
 
     public function GetDailyQuote(string $language = 'english'): string
+    {
+        return Cache::remember(
+            self::CACHE_KEY_PREFIX . $language,
+            now('Europe/Copenhagen')->endOfDay(),
+            fn () => $this->fetchDailyQuoteFromDatabase($language)
+        );
+    }
+
+    private function fetchDailyQuoteFromDatabase(string $language): string
     {
         // Construct the column name dynamically
         $columnName = "{$language}_quote";
@@ -81,11 +92,11 @@ class QuoteLogic
             $messages = [
                 [
                     'role' => 'system',
-                    'content' => 'You are a master translator and will translate English quotes to Danish as accurately as possible.',
+                    'content' => 'You are a master translator and will translate English quotes to Danish as accurately as possible. Respond with ONLY the Danish translation itself — no preamble, no explanation, no notes, no quotation marks, nothing before or after the translation.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => "Translate this English quote without adding quotation marks: $englishQuote",
+                    'content' => "Translate this English quote to Danish. Reply with the translation only, nothing else: $englishQuote",
                 ],
             ];
 
@@ -123,6 +134,19 @@ class QuoteLogic
 
         $response_text = $response_data['choices'][0]['message']['content'];
 
-        return $response_text;
+        return $response_text === null ? null : $this->stripLeakedCommentary($response_text);
+    }
+
+    // Reasoning models sometimes leak a preamble ("Here is the translation:") or a
+    // trailing explanation alongside the actual answer despite being told not to.
+    private function stripLeakedCommentary(string $text): string
+    {
+        $text = trim($text);
+        // Drop a leading line that reads like a preamble (ends in ':')
+        $text = preg_replace('/^[^\n]*:\s*\n+/u', '', $text, 1);
+        // Anything after a blank line is treated as commentary, not part of the answer
+        $text = trim(explode("\n\n", $text)[0]);
+
+        return trim($text, "\"'“”„»«");
     }
 }
