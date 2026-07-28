@@ -12,6 +12,15 @@ class QuoteLogic
 {
     public const CACHE_KEY_PREFIX = 'daily_quote_';
 
+    // Tried in order. 3 failed attempts on a model -> next model.
+    private const FALLBACK_MODELS = [
+        'google/gemma-4-31b-it:free',
+        'openai/gpt-oss-20b:free',
+        'nvidia/nemotron-3-super-120b-a12b:free',
+    ];
+
+    private const MAX_ATTEMPTS_PER_MODEL = 3;
+
     public function GetDailyQuote(string $language = 'english'): string
     {
         return Cache::remember(
@@ -47,24 +56,33 @@ class QuoteLogic
 
     public function GenerateNewQuotesToDatabase(): void
     {
-        try {
-            // Generate a new English quote
-            $englishQuote = $this->GenerateNewEnglishQuote();
-            // Generate a new Danish quote
-            $danishQuote = $this->GenerateNewDanishQuote($englishQuote);
+        foreach (self::FALLBACK_MODELS as $model) {
+            for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS_PER_MODEL; $attempt++) {
+                try {
+                    $englishQuote = $this->GenerateNewEnglishQuote($model);
+                    $danishQuote = $this->GenerateNewDanishQuote($englishQuote, $model);
 
-            // Save both quotes to the database
-            Quote::create([
-                'english_quote' => $englishQuote,
-                'danish_quote' => $danishQuote,
-            ]);
-        } catch (\Throwable $e) {
-            // Leave the previous quote in place rather than showing an error message as content
-            Log::error('Failed to generate daily quotes, keeping previous quote', ['exception' => $e->getMessage()]);
+                    Quote::create([
+                        'english_quote' => $englishQuote,
+                        'danish_quote' => $danishQuote,
+                    ]);
+
+                    return;
+                } catch (\Throwable $e) {
+                    Log::error('Failed to generate daily quotes', [
+                        'model' => $model,
+                        'attempt' => $attempt,
+                        'exception' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
+
+        // Leave the previous quote in place rather than showing an error message as content
+        Log::error('All models exhausted, keeping previous quote');
     }
 
-    private function GenerateNewEnglishQuote(): string
+    private function GenerateNewEnglishQuote(string $model): string
     {
         // Fetch the last 10 English quotes from the database
         $lastQuotes = Quote::latest()->take(10)->pluck('english_quote')->toArray();
@@ -83,10 +101,10 @@ class QuoteLogic
             ],
         ];
 
-        return $this->GetAiGeneratedText($messages) ?? throw new \RuntimeException('Empty response from AI for English quote');
+        return $this->GetAiGeneratedText($messages, $model) ?? throw new \RuntimeException('Empty response from AI for English quote');
     }
 
-    private function GenerateNewDanishQuote(string $englishQuote): string
+    private function GenerateNewDanishQuote(string $englishQuote, string $model): string
     {
         $messages = [
             [
@@ -99,11 +117,11 @@ class QuoteLogic
             ],
         ];
 
-        return $this->GetAiGeneratedText($messages) ?? throw new \RuntimeException('Empty response from AI for Danish translation');
+        return $this->GetAiGeneratedText($messages, $model) ?? throw new \RuntimeException('Empty response from AI for Danish translation');
     }
 
     // Might throw an exception from OpenRouter
-    public function GetAiGeneratedText(array $messages)
+    public function GetAiGeneratedText(array $messages, string $model = 'google/gemma-4-31b-it:free')
     {
         $apiKey = env("OPENROUTER_AI_KEY");
 
@@ -117,7 +135,7 @@ class QuoteLogic
                     'Authorization' => 'Bearer ' . $apiKey,
                 ],
                 'json' => [
-                    'model' => 'google/gemma-4-31b-it:free',
+                    'model' => $model,
                     'messages' => $messages,
                     'reasoning' => [
                         'enabled' => true
@@ -128,13 +146,14 @@ class QuoteLogic
             // The free model tier can rate-limit (429) or time out under load — log the
             // status/body so that's distinguishable from an auth or payload error.
             Log::error('OpenRouter request failed', [
+                'model' => $model,
                 'status' => $e->getResponse()?->getStatusCode(),
                 'body' => $e->getResponse()?->getBody()?->getContents(),
                 'message' => $e->getMessage(),
             ]);
             throw $e;
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
-            Log::error('OpenRouter request timed out', ['message' => $e->getMessage()]);
+            Log::error('OpenRouter request timed out', ['model' => $model, 'message' => $e->getMessage()]);
             throw $e;
         }
 
