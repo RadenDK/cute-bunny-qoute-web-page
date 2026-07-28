@@ -117,7 +117,7 @@ class QuoteLogic
                     'Authorization' => 'Bearer ' . $apiKey,
                 ],
                 'json' => [
-                    'model' => 'xiaomi/mimo-v2-flash:free',
+                    'model' => 'google/gemma-4-31b-it:free',
                     'messages' => $messages,
                     'reasoning' => [
                         'enabled' => true
