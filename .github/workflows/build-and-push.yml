@@ -1,5 +1,9 @@
 name: Build and Push to GHCR
 
+# Cannot use RadenDK/homeserver's shared build-push.yml: this repo is public and
+# that one is private, which GitHub refuses regardless of Actions access settings.
+# Keep this file in sync by hand, or move the shared workflow to a public repo.
+
 on:
   push:
     branches: [main]
@@ -10,46 +14,43 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-    build-and-push:                                                                                                                                                                                              
-      runs-on: ubuntu-latest                                                                                                                                                                                     
-      permissions:                                                                                                                                                                                               
-        contents: read                                                                                                                                                                                           
-        packages: write                                                                                                                                                                                          
-                                                                                                                                                                                                                 
-      steps:                                                                                                                                                                                                     
-        - name: Checkout                                                                                                                                                                                         
-          uses: actions/checkout@v6                                                                                                                                                                              
-                                                                                                                                                                                                                 
-        - name: Log in to GitHub Container Registry                                                                                                                                                              
-          uses: docker/login-action@v4                                                                                                                                                                           
-          with:                                                                                                                                                                                                  
-            registry: ${{ env.REGISTRY }}                                                                                                                                                                        
-            username: ${{ github.actor }}                                                                                                                                                                        
-            password: ${{ secrets.GITHUB_TOKEN }}                                                                                                                                                                
-                                                                                                                                                                                                                 
-        - name: Extract metadata                                                                                                                                                                                 
-          id: meta                                                                                                                                                                                               
-          uses: docker/metadata-action@v6                                                                                                                                                                        
-          with:                                                                                                                                                                                                  
-            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}                                                                                                                                                    
-            tags: |
-              type=raw,value=latest                                                                                                                                                                              
-              type=sha,prefix=                                                                                                                                                                                   
-                                                                                                                                                                                                                 
-        - name: Build and push                                                                                                                                                                                   
-          uses: docker/build-push-action@v7                                                                                                                                                                      
-          with:                                                                                                                                                                                                  
-            context: ./CuteBunnyWebApp                                                                                                                                                                           
-            push: true                                                                                                                                                                                           
-            tags: ${{ steps.meta.outputs.tags }}                                                                                                                                                                 
-            labels: ${{ steps.meta.outputs.labels }}                                                                                                                                                             
-            build-args: |
-              APP_KEY=${{ secrets.APP_KEY }}                                                                                                                                                                     
-              DB_CONNECTION=${{ secrets.DB_CONNECTION }}                                                                                                                                                         
-              DB_HOST=${{ secrets.DB_HOST }}                                                                                                                                                                     
-              DB_PORT=${{ secrets.DB_PORT }}                                                                                                                                                                     
-              DB_DATABASE=${{ secrets.DB_DATABASE }}                                                                                                                                                             
-              DB_USERNAME=${{ secrets.DB_USERNAME }}                                                                                                                                                             
-              DB_PASSWORD=${{ secrets.DB_PASSWORD }}                                                                                                                                                             
-              PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}                                                                                                                                                       
-              OPENROUTER_AI_KEY=${{ secrets.OPENROUTER_AI_KEY }}    
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+
+      # No build-args. This image is a public GHCR package; anything passed here
+      # is readable from the image config with `docker inspect`. Runtime config
+      # comes from publicvm's ~/.env via docker-compose.
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./CuteBunnyWebApp
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
