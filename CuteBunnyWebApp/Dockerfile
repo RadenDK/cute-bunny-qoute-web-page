@@ -1,27 +1,10 @@
 # Base PHP with Apache
 FROM php:8.5-apache
 
-# Build arguments for environment variables
-ARG APP_KEY
-ARG DB_CONNECTION
-ARG DB_HOST
-ARG DB_PORT
-ARG DB_DATABASE
-ARG DB_USERNAME
-ARG DB_PASSWORD
-ARG PEXELS_API_KEY
-ARG OPENROUTER_AI_KEY
-
-# Set environment variables from build args
-ENV APP_KEY=${APP_KEY}
-ENV DB_CONNECTION=${DB_CONNECTION}
-ENV DB_HOST=${DB_HOST}
-ENV DB_PORT=${DB_PORT}
-ENV DB_DATABASE=${DB_DATABASE}
-ENV DB_USERNAME=${DB_USERNAME}
-ENV DB_PASSWORD=${DB_PASSWORD}
-ENV PEXELS_API_KEY=${PEXELS_API_KEY}
-ENV OPENROUTER_AI_KEY=${OPENROUTER_AI_KEY}
+# No ARG/ENV for config here on purpose. This image is published to a public
+# GHCR package, and build args land in the image config where `docker inspect`
+# reads them back in plaintext. Runtime config comes from publicvm's ~/.env via
+# docker-compose. See RadenDK/homeserver docs/tasks/backlog/deploy-standard.md.
 
 # Install PHP extensions and cron
 RUN apt-get update && apt-get install -y \
