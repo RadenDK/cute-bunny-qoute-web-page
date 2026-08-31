@@ -45,3 +45,6 @@ yarn-error.log
 
 # Temporary files
 /storage/app/public/temp/*
+
+playwright-screenshots
+.playwright-mcp
