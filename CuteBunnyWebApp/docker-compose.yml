@@ -10,7 +10,7 @@ services:
     user: "1000:1000"
 
   db:
-    image: mysql:5.7
+    image: mysql:9.7
     container_name: cute_bunny_db
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: true
