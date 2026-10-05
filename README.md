@@ -18,3 +18,7 @@ You can view the project live at [https://bunny.rasmusjensen.com/](https://bunny
 - Laravel
 - Docker
 - OpenAI API for generating quotes
+
+## Deployment
+
+Production is deployed from [RadenDK/homeserver](https://github.com/RadenDK/homeserver): the service definition lives in [`publicvm/docker-compose.yml`](https://github.com/RadenDK/homeserver/blob/main/publicvm/docker-compose.yml). This repo only builds and pushes the image to GHCR.
